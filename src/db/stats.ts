@@ -3,25 +3,19 @@ import { type GuildId } from '../domain/guild.ts';
 import { type UserId } from '../domain/user.ts';
 import { type ChannelId } from '../domain/channel.ts';
 import { type MessageId } from '../domain/message.ts';
-import { Emoji } from '../domain/emoji.ts';
-
-export type ChatterRow = { user_id: UserId; message_count: number };
-export type EmojiRow   = { emoji_id: string; emoji_name: string; animated: number; usage_count: number };
-
-export function rowToEmoji(row: EmojiRow): Emoji {
-	return new Emoji(row.emoji_id, row.emoji_name, row.animated === 1);
-}
+import { type ChatterRow, type EmojiRow, type ScanEvent } from '../domain/stats.ts';
 
 export function insertMessageEvent(
 	messageId: MessageId,
 	guildId: GuildId,
 	channelId: ChannelId,
 	userId: UserId,
+	sentAt: string,
 ): void {
 	db.prepare(`
 		INSERT OR IGNORE INTO message_events (message_id, guild_id, channel_id, user_id, sent_at)
-		VALUES (?, ?, ?, ?, datetime('now'))
-	`).run(messageId, guildId, channelId, userId);
+		VALUES (?, ?, ?, ?, ?)
+	`).run(messageId, guildId, channelId, userId, sentAt);
 }
 
 export function insertEmojiEvent(
@@ -32,73 +26,78 @@ export function insertEmojiEvent(
 	emojiName: string,
 	animated: boolean,
 	userId: UserId,
+	sentAt: string,
 ): void {
 	db.prepare(`
 		INSERT INTO emoji_events (message_id, guild_id, channel_id, emoji_id, emoji_name, animated, user_id, used_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
-	`).run(messageId, guildId, channelId, emojiId, emojiName, animated ? 1 : 0, userId);
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`).run(messageId, guildId, channelId, emojiId, emojiName, animated ? 1 : 0, userId, sentAt);
 }
 
-export function queryTopChatters(guildId: GuildId, since: string | null, limit: number, offset: number): ChatterRow[] {
+export function queryTopChatters(guildId: GuildId, since: Date | null, limit: number, offset: number): ChatterRow[] {
+	const sinceStr = since?.toISOString() ?? null;
+	const params = sinceStr ? [guildId, sinceStr, limit, offset] : [guildId, limit, offset];
 	return db.prepare(`
 		SELECT user_id, COUNT(*) as message_count
 		FROM message_events
-		WHERE guild_id = ? ${since ? `AND sent_at >= ${since}` : ''}
+		WHERE guild_id = ?${sinceStr ? ' AND sent_at >= ?' : ''}
 		GROUP BY user_id
 		ORDER BY message_count DESC
 		LIMIT ? OFFSET ?
-	`).all(guildId, limit, offset) as ChatterRow[];
+	`).all(...params) as ChatterRow[];
 }
 
-export function queryTopEmojis(guildId: GuildId, since: string | null, limit: number, offset: number): EmojiRow[] {
+export function queryTopEmojis(guildId: GuildId, since: Date | null, limit: number, offset: number): EmojiRow[] {
+	const sinceStr = since?.toISOString() ?? null;
+	const params = sinceStr ? [guildId, sinceStr, limit, offset] : [guildId, limit, offset];
 	return db.prepare(`
 		SELECT emoji_id, emoji_name, animated, COUNT(*) as usage_count
 		FROM emoji_events
-		WHERE guild_id = ? ${since ? `AND used_at >= ${since}` : ''}
+		WHERE guild_id = ?${sinceStr ? ' AND used_at >= ?' : ''}
 		GROUP BY emoji_id
 		ORDER BY usage_count DESC
 		LIMIT ? OFFSET ?
-	`).all(guildId, limit, offset) as EmojiRow[];
+	`).all(...params) as EmojiRow[];
 }
 
-export function queryTotalChatters(guildId: GuildId, since: string | null): number {
+export function queryTotalChatters(guildId: GuildId, since: Date | null): number {
+	const sinceStr = since?.toISOString() ?? null;
+	const params = sinceStr ? [guildId, sinceStr] : [guildId];
 	const row = db.prepare(`
 		SELECT COUNT(DISTINCT user_id) as total
 		FROM message_events
-		WHERE guild_id = ? ${since ? `AND sent_at >= ${since}` : ''}
-	`).get(guildId) as { total: number };
+		WHERE guild_id = ?${sinceStr ? ' AND sent_at >= ?' : ''}
+	`).get(...params) as { total: number };
 	return row.total;
 }
 
-export function queryTotalEmojis(guildId: GuildId, since: string | null): number {
+export function queryTotalEmojis(guildId: GuildId, since: Date | null): number {
+	const sinceStr = since?.toISOString() ?? null;
+	const params = sinceStr ? [guildId, sinceStr] : [guildId];
 	const row = db.prepare(`
 		SELECT COUNT(DISTINCT emoji_name) as total
 		FROM emoji_events
-		WHERE guild_id = ? ${since ? `AND used_at >= ${since}` : ''}
-	`).get(guildId) as { total: number };
+		WHERE guild_id = ?${sinceStr ? ' AND used_at >= ?' : ''}
+	`).get(...params) as { total: number };
 	return row.total;
 }
 
-export type MessageEventRow = {
-	messageId: MessageId;
-	guildId: GuildId;
-	channelId: ChannelId;
-	userId: UserId;
-	sentAt: string;
-};
-
-export type EmojiEventRow = {
-	messageId: MessageId;
-	guildId: GuildId;
-	channelId: ChannelId;
-	emojiId: string;
-	emojiName: string;
-	animated: boolean;
-	userId: UserId;
-	usedAt: string;
-};
-
-export type ScanEvent = MessageEventRow & { emojis: Emoji[] };
+export function removeStaleMessages(scannedIdsByChannel: Map<ChannelId, Set<MessageId>>): number {
+	let deleted = 0;
+	db.transaction(() => {
+		for (const [channelId, scannedIds] of scannedIdsByChannel) {
+			const dbRows = db.prepare(`SELECT message_id FROM message_events WHERE channel_id = ?`)
+				.all(channelId) as { message_id: MessageId }[];
+			const staleIds = dbRows.map((r) => r.message_id).filter((id) => !scannedIds.has(id));
+			if (staleIds.length === 0) continue;
+			const placeholders = staleIds.map(() => '?').join(',');
+			db.prepare(`DELETE FROM emoji_events WHERE message_id IN (${placeholders})`).run(...staleIds);
+			const result = db.prepare(`DELETE FROM message_events WHERE message_id IN (${placeholders})`).run(...staleIds);
+			deleted += result.changes;
+		}
+	})();
+	return deleted;
+}
 
 export function bulkInsert(events: ScanEvent[]): number {
 	const insertMessage = db.prepare(`

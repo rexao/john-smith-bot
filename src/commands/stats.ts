@@ -6,19 +6,11 @@ import {
 } from 'discord.js';
 import type { Command } from './index.ts';
 import { asGuildId } from '../domain/guild.ts';
-import { queryTopChatters, queryTopEmojis, queryTotalChatters, queryTotalEmojis, bulkInsert } from '../db/stats.ts';
-import { buildChattersEmbed, buildEmotesEmbed, buildPaginationComponents, PAGE_SIZE } from '../components/stats.ts';
-import { parsePeriod, DEFAULT_PERIOD_SUGGESTIONS } from '../util/period.ts';
+import { queryTopChatters, queryTopEmojis, queryTotalChatters, queryTotalEmojis, bulkInsert, removeStaleMessages } from '../db/stats.ts';
+import { buildChattersEmbed, buildEmotesEmbed, buildPaginationComponents } from '../components/stats.ts';
+import { PAGE_SIZE } from '../domain/stats.ts';
+import { parsePeriod, getPeriodSuggestions } from '../util/period.ts';
 import { scanGuild } from '../util/scan.ts';
-
-const UNITS = ['h', 'd', 'w', 'm', 'y'];
-
-function getPeriodSuggestions(current: string): string[] {
-	if (!current) return DEFAULT_PERIOD_SUGGESTIONS;
-	const numMatch = current.match(/^(\d+)$/);
-	if (numMatch) return UNITS.map((u) => `${numMatch[1]}${u}`).concat(['all']);
-	return DEFAULT_PERIOD_SUGGESTIONS.filter((s) => s.startsWith(current));
-}
 
 async function handlePeriodSubcommand(
 	i: ChatInputCommandInteraction,
@@ -27,7 +19,7 @@ async function handlePeriodSubcommand(
 	const guildId = asGuildId(i.guild!.id);
 	const periodInput = i.options.getString('period') ?? 'all';
 
-	let since: string | null;
+	let since: Date | null;
 	try {
 		since = parsePeriod(periodInput);
 	} catch (err) {
@@ -105,9 +97,10 @@ export default {
 
 		if (sub === 'scan') {
 			await i.deferReply();
-			const { events, channelCount } = await scanGuild(i.guild);
+			const { events, channelCount, scannedIdsByChannel } = await scanGuild(i.guild);
 			const inserted = bulkInsert(events);
-			await i.followUp(`Scan complete. ${channelCount} channels scanned, ${events.length} messages found, ${inserted} new messages inserted.`);
+			const deleted = removeStaleMessages(scannedIdsByChannel);
+			await i.followUp(`Scan complete. ${channelCount} channels scanned, ${events.length} messages found, ${inserted} new messages inserted, ${deleted} stale messages removed.`);
 		}
 	},
 } satisfies Command;

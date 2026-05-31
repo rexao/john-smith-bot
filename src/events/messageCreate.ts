@@ -17,11 +17,12 @@ export default {
 		const channelId = asChannelId(message.channel.id);
 		const userId    = asUserId(message.author.id);
 
-		insertMessageEvent(messageId, guildId, channelId, userId);
+		const sentAt = message.createdAt.toISOString();
+		insertMessageEvent(messageId, guildId, channelId, userId, sentAt);
 
 		for (const [, animatedFlag, name, id] of message.content.matchAll(EMOJI_REGEX)) {
 			const emoji = Emoji.fromRegexMatch(animatedFlag, name, id);
-			insertEmojiEvent(messageId, guildId, channelId, emoji.id, emoji.name, emoji.animated, userId);
+			insertEmojiEvent(messageId, guildId, channelId, emoji.id, emoji.name, emoji.animated, userId, sentAt);
 		}
 	},
 } satisfies Event<Events.MessageCreate>;

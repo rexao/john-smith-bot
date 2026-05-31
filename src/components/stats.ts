@@ -7,23 +7,12 @@ import {
 	type GuildEmoji,
 } from 'discord.js';
 import { type GuildId } from '../domain/guild.ts';
-import { type ChatterRow, type EmojiRow, rowToEmoji } from '../db/stats.ts';
+import { type ChatterRow, type EmojiRow, rowToEmoji, PAGE_SIZE } from '../domain/stats.ts';
+import { periodLabel } from '../util/period.ts';
 
 type GuildInfo = { name: string; iconURL: string | null };
 
 const COLOR = 0xed4245;
-
-function periodLabel(period: string): string {
-	if (period === 'all') return 'All Time';
-	const match = period.match(/^(\d+)(h|d|w|m|y)$/);
-	if (!match) return period;
-	const [, num, unit] = match;
-	const unitLabel: Record<string, string> = { h: 'Hour', d: 'Day', w: 'Week', m: 'Month', y: 'Year' };
-	const n = parseInt(num, 10);
-	return `Last ${n} ${unitLabel[unit]}${n > 1 ? 's' : ''}`;
-}
-
-export const PAGE_SIZE = 10;
 
 export function buildChattersEmbed(
 	guild: GuildInfo,

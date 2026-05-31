@@ -1,7 +1,8 @@
 import type { ButtonInteraction } from 'discord.js';
 import { asGuildId } from '../../domain/guild.ts';
 import { queryTopChatters, queryTopEmojis, queryTotalChatters, queryTotalEmojis } from '../../db/stats.ts';
-import { buildChattersEmbed, buildEmotesEmbed, buildPaginationComponents, PAGE_SIZE } from '../../components/stats.ts';
+import { buildChattersEmbed, buildEmotesEmbed, buildPaginationComponents } from '../../components/stats.ts';
+import { PAGE_SIZE } from '../../domain/stats.ts';
 import { parsePeriod } from '../../util/period.ts';
 
 export async function handleStatsButton(interaction: ButtonInteraction): Promise<void> {
