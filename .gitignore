@@ -1,0 +1,24 @@
+.claude/
+
+# Node.js
+node_modules/
+
+# Environment
+.env
+config.json
+
+# Database
+*.db
+
+# Logs & runtime output
+*.log
+nohup.out
+
+# Build output
+dist/
+
+# Python (legacy)
+__pycache__/
+*.pyc
+data/
+cogs/archived/
