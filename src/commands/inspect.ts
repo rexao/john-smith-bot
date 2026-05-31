@@ -6,6 +6,7 @@ import {
 	buildUserComponents,
 	buildUserEmbeds,
 } from '../components/inspect.ts';
+import { asUserId } from '../domain/user.ts';
 
 export default {
 	data: new SlashCommandBuilder()
@@ -47,7 +48,7 @@ export default {
 			}
 
 			const embeds = await buildUserEmbeds(member, i.client);
-			await i.reply({ embeds: [embeds.main], components: [buildUserComponents(member.id, 'main', !!i.guild)] });
+			await i.reply({ embeds: [embeds.main], components: [buildUserComponents(asUserId(member.id), 'main', !!i.guild)] });
 		}
 	},
 } satisfies Command;

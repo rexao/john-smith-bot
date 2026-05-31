@@ -8,25 +8,10 @@ import {
 	type Guild,
 	type GuildMember,
 } from 'discord.js';
+import { type UserId } from '../domain/user.ts';
+import { calculateTimeElapsed } from '../util/time.ts';
 
 const COLOR = 0x5873f2;
-
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-
-function calculateTimeElapsed(dt: Date, now: Date): string {
-	const diff = now.getTime() - dt.getTime();
-	const seconds = diff / 1_000;
-	const minutes = seconds / 60;
-	const hours = minutes / 60;
-	const days = hours / 24;
-
-	if (seconds < 60) return rtf.format(-Math.floor(seconds), 'second');
-	if (minutes < 60) return rtf.format(-Math.floor(minutes), 'minute');
-	if (hours < 24) return rtf.format(-Math.floor(hours), 'hour');
-	if (days < 30) return rtf.format(-Math.floor(days), 'day');
-	if (days < 365) return rtf.format(-Math.floor(days / 30), 'month');
-	return rtf.format(-Math.floor(days / 365), 'year');
-}
 
 export type ServerPage = 'main' | 'icon' | 'bannerBackground' | 'inviteBackground';
 export type UserPage = 'main' | 'avatar' | 'profileBanner' | 'serverAvatar';
@@ -243,7 +228,7 @@ export async function buildUserEmbeds(member: GuildMember, client: Client): Prom
 	return { main, avatar, profileBanner, serverAvatar };
 }
 
-export function buildUserComponents(userId: string, page: UserPage, inGuild: boolean): ActionRowBuilder<ButtonBuilder> {
+export function buildUserComponents(userId: UserId, page: UserPage, inGuild: boolean): ActionRowBuilder<ButtonBuilder> {
 	const row = new ActionRowBuilder<ButtonBuilder>();
 
 	if (page === 'main') {

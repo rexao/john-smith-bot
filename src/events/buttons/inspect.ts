@@ -7,6 +7,7 @@ import {
 	type ServerPage,
 	type UserPage,
 } from '../../components/inspect.ts';
+import { asUserId } from '../../domain/user.ts';
 
 export async function handleInspectButton(interaction: ButtonInteraction): Promise<void> {
 	// customId format:
@@ -24,7 +25,8 @@ export async function handleInspectButton(interaction: ButtonInteraction): Promi
 
 	if (target === 'user') {
 		if (!interaction.guild) return;
-		const [userId, page] = rest as [string, UserPage];
+		const [rawUserId, page] = rest as [string, UserPage];
+		const userId = asUserId(rawUserId);
 		const member = await interaction.guild.members.fetch(userId);
 		const embed = (await buildUserEmbeds(member, interaction.client))[page];
 		const components = buildUserComponents(userId, page, true);
