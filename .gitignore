@@ -17,6 +17,9 @@ nohup.out
 # Build output
 dist/
 
+# macOS
+.DS_Store
+
 # Python (legacy)
 __pycache__/
 *.pyc

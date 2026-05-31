@@ -5,7 +5,15 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { loadEvents } from './util/loaders.ts';
 
 // Initialize the client
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildPresences,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent,
+	],
+});
 
 // Load the events and commands
 const events = await loadEvents(pathToFileURL(join(import.meta.dirname, 'events')));
