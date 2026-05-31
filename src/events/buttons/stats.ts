@@ -26,7 +26,7 @@ export async function handleStatsButton(interaction: ButtonInteraction): Promise
 		const total = queryTotalEmojis(guildId, since);
 		const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 		const rows = queryTopEmojis(guildId, since, PAGE_SIZE, offset);
-		const embed = buildEmotesEmbed(guild, rows, page, periodInput);
+		const embed = buildEmotesEmbed(interaction.guild!, rows, page, periodInput);
 		const components = buildPaginationComponents('emotes', guildId, periodInput, page, maxPage);
 		await interaction.update({ embeds: [embed], components: components ? [components] : [] });
 	}

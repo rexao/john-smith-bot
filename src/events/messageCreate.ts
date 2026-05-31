@@ -10,7 +10,7 @@ import { Emoji, EMOJI_REGEX } from '../domain/emoji.ts';
 export default {
 	name: Events.MessageCreate,
 	execute(message: Message) {
-		if (message.author.bot || !message.guild) return;
+		if (!message.guild) return;
 
 		const messageId = asMessageId(message.id);
 		const guildId   = asGuildId(message.guild.id);

@@ -48,7 +48,7 @@ async function handlePeriodSubcommand(
 		const total = queryTotalEmojis(guildId, since);
 		const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 		const rows = queryTopEmojis(guildId, since, PAGE_SIZE, 0);
-		const embed = buildEmotesEmbed(guild, rows, 1, periodInput);
+		const embed = buildEmotesEmbed(i.guild!, rows, 1, periodInput);
 		const components = buildPaginationComponents('emotes', guildId, periodInput, 1, maxPage);
 		await i.reply({ embeds: [embed], components: components ? [components] : [] });
 	}
@@ -105,9 +105,9 @@ export default {
 
 		if (sub === 'scan') {
 			await i.deferReply();
-			const events = await scanGuild(i.guild);
+			const { events, channelCount } = await scanGuild(i.guild);
 			const inserted = bulkInsert(events);
-			await i.followUp(`Scan complete. ${inserted} new messages inserted (${events.length} total scanned).`);
+			await i.followUp(`Scan complete. ${channelCount} channels scanned, ${events.length} messages found, ${inserted} new messages inserted.`);
 		}
 	},
 } satisfies Command;

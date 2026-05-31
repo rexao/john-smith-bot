@@ -6,19 +6,21 @@ import { asMessageId } from '../domain/message.ts';
 import { Emoji, EMOJI_REGEX } from '../domain/emoji.ts';
 import type { ScanEvent } from '../db/stats.ts';
 
-export async function scanGuild(guild: Guild): Promise<ScanEvent[]> {
+export async function scanGuild(guild: Guild): Promise<{ events: ScanEvent[]; channelCount: number }> {
 	const guildId = asGuildId(guild.id);
 	const events: ScanEvent[] = [];
 
-	for (const channel of guild.channels.cache.values()) {
-		if (!channel.isTextBased()) continue;
+	const allChannels = await guild.channels.fetch();
+	let channelCount = 0;
+
+	for (const channel of allChannels.values()) {
+		if (!channel || !channel.isTextBased()) continue;
 		try {
 			let before: string | undefined;
 			while (true) {
 				const messages = await channel.messages.fetch({ limit: 100, before });
 				if (messages.size === 0) break;
 				for (const message of messages.values()) {
-					if (message.author.bot) continue;
 					events.push({
 						messageId: asMessageId(message.id),
 						guildId,
@@ -32,10 +34,11 @@ export async function scanGuild(guild: Guild): Promise<ScanEvent[]> {
 				}
 				before = messages.last()?.id;
 			}
+			channelCount++;
 		} catch {
 			// チャンネルにアクセス権がない場合はスキップ
 		}
 	}
 
-	return events;
+	return { events, channelCount };
 }

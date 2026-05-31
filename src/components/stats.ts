@@ -3,6 +3,8 @@ import {
 	ButtonBuilder,
 	ButtonStyle,
 	EmbedBuilder,
+	type Guild,
+	type GuildEmoji,
 } from 'discord.js';
 import { type GuildId } from '../domain/guild.ts';
 import { type ChatterRow, type EmojiRow, rowToEmoji } from '../db/stats.ts';
@@ -32,7 +34,7 @@ export function buildChattersEmbed(
 	const description = rows.length === 0
 		? 'No data yet.'
 		: rows.map((row, i) =>
-			`\`${(page - 1) * PAGE_SIZE + i + 1}\` <@${row.user_id}> — **${row.message_count}**`,
+			`\`${(page - 1) * PAGE_SIZE + i + 1}\`　-　<@${row.user_id}>　-　**${row.message_count}**`,
 		).join('\n');
 
 	return new EmbedBuilder()
@@ -44,7 +46,7 @@ export function buildChattersEmbed(
 }
 
 export function buildEmotesEmbed(
-	guild: GuildInfo,
+	guild: Guild,
 	rows: EmojiRow[],
 	page: number,
 	period: string,
@@ -52,15 +54,20 @@ export function buildEmotesEmbed(
 	const description = rows.length === 0
 		? 'No data yet.'
 		: rows.map((row, i) => {
-			const emoji = rowToEmoji(row);
-			return `\`${(page - 1) * PAGE_SIZE + i + 1}\` ${emoji.format()} — **${row.usage_count}**`;
+			let guildEmoji: GuildEmoji | undefined;
+			for (const g of guild.client.guilds.cache.values()) {
+				guildEmoji = g.emojis.cache.find(e => e.name === row.emoji_name);
+				if (guildEmoji) break;
+			}
+			const display = guildEmoji ? guildEmoji.toString() : rowToEmoji(row).format();
+			return `\`${(page - 1) * PAGE_SIZE + i + 1}\`　-　${display} ${row.emoji_name}　-　**${row.usage_count}**`;
 		}).join('\n');
 
 	return new EmbedBuilder()
 		.setColor(COLOR)
 		.setTitle(`Top Emotes — \`${periodLabel(period)}\``)
 		.setDescription(description)
-		.setAuthor({ name: guild.name, iconURL: guild.iconURL ?? undefined })
+		.setAuthor({ name: guild.name, iconURL: guild.iconURL() ?? undefined })
 		.setTimestamp();
 }
 
