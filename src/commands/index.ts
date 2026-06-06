@@ -1,26 +1,31 @@
-import type { AutocompleteInteraction, RESTPostAPIApplicationCommandsJSONBody, CommandInteraction } from 'discord.js';
-import { z } from 'zod';
-import type { StructurePredicate } from '../util/loaders.ts';
+import type {
+  AutocompleteInteraction,
+  RESTPostAPIApplicationCommandsJSONBody,
+  CommandInteraction,
+} from 'discord.js'
+import { z } from 'zod'
+import type { StructurePredicate } from '../util/loaders.ts'
 
 /**
  * Defines the structure of a command
  */
 export type Command = {
-	data: RESTPostAPIApplicationCommandsJSONBody;
-	execute(interaction: CommandInteraction): Promise<void> | void;
-	autocomplete?(interaction: AutocompleteInteraction): Promise<void> | void;
-};
+  autocomplete?(interaction: AutocompleteInteraction): Promise<void> | void,
+  data: RESTPostAPIApplicationCommandsJSONBody,
+  execute(interaction: CommandInteraction): Promise<void> | void
+}
 
 /**
  * Defines the schema for a command
  */
 export const schema = z.object({
-	data: z.record(z.string(), z.any()),
-	execute: z.function(),
-});
+  data: z.record(z.string(), z.any()),
+  execute: z.function(),
+})
 
 /**
  * Defines the predicate to check if an object is a valid Command type.
  */
-export const predicate: StructurePredicate<Command> = (structure: unknown): structure is Command =>
-	schema.safeParse(structure).success;
+export const predicate: StructurePredicate<Command> = (
+  structure: unknown,
+): structure is Command => schema.safeParse(structure).success

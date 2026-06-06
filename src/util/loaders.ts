@@ -1,14 +1,19 @@
-import type { PathLike } from 'node:fs';
-import { glob, stat } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { predicate as commandPredicate, type Command } from '../commands/index.ts';
-import { predicate as eventPredicate, type Event } from '../events/index.ts';
+import type { PathLike } from 'node:fs'
+import { glob, stat } from 'node:fs/promises'
+import { basename, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import {
+  predicate as commandPredicate,
+  type Command,
+} from '../commands/index.ts'
+import { predicate as eventPredicate, type Event } from '../events/index.ts'
 
 /**
  * A predicate to check if the structure is valid
  */
-export type StructurePredicate<Structure> = (structure: unknown) => structure is Structure;
+export type StructurePredicate<Structure> = (
+  structure: unknown,
+) => structure is Structure
 
 /**
  * Loads all the structures in the provided directory
@@ -19,51 +24,57 @@ export type StructurePredicate<Structure> = (structure: unknown) => structure is
  * @returns
  */
 export async function loadStructures<Structure>(
-	dir: PathLike,
-	predicate: StructurePredicate<Structure>,
-	recursive = true,
+  dir: PathLike,
+  predicate: StructurePredicate<Structure>,
+  recursive = true,
 ): Promise<Structure[]> {
-	// Get the stats of the directory
-	const statDir = await stat(dir);
+  // Get the stats of the directory
+  const statDir = await stat(dir)
 
-	// If the provided directory path is not a directory, throw an error
-	if (!statDir.isDirectory()) {
-		throw new Error(`The directory '${dir}' is not a directory.`);
-	}
+  // If the provided directory path is not a directory, throw an error
+  if (!statDir.isDirectory()) {
+    throw new Error(`The directory '${dir}' is not a directory.`)
+  }
 
-	// Create an empty array to store the structures
-	const structures: Structure[] = [];
+  // Create an empty array to store the structures
+  const structures: Structure[] = []
 
-	// Create a glob pattern to match the .ts files
-	const basePath = dir instanceof URL ? fileURLToPath(dir) : dir.toString();
-	const pattern = resolve(basePath, recursive ? '**/*.ts' : '*.ts');
+  // Create a glob pattern to match the .ts files
+  const basePath = dir instanceof URL ? fileURLToPath(dir) : dir.toString()
+  const pattern = resolve(basePath, recursive ? '**/*.ts' : '*.ts')
 
-	// Loop through all the matching files in the directory
-	for await (const file of glob(pattern)) {
-		// If the file is index.ts, skip the file
-		if (basename(file) === 'index.ts') {
-			continue;
-		}
+  // Loop through all the matching files in the directory
+  for await (const file of glob(pattern)) {
+    // If the file is index.ts, skip the file
+    if (basename(file) === 'index.ts') {
+      continue
+    }
 
-		// Import the structure dynamically from the file
-		const { default: structure } = await import(pathToFileURL(file).href);
+    // Import the structure dynamically from the file
+    const { default: structure } = await import(pathToFileURL(file).href)
 
-		// If the default export is a valid structure, add it
-		if (predicate(structure)) {
-			structures.push(structure);
-		}
-	}
+    // If the default export is a valid structure, add it
+    if (predicate(structure)) {
+      structures.push(structure)
+    }
+  }
 
-	return structures;
+  return structures
 }
 
-export async function loadCommands(dir: PathLike, recursive = true): Promise<Map<string, Command>> {
-	return (await loadStructures(dir, commandPredicate, recursive)).reduce(
-		(acc, cur) => acc.set(cur.data.name, cur),
-		new Map<string, Command>(),
-	);
+export async function loadCommands(
+  dir: PathLike,
+  recursive = true,
+): Promise<Map<string, Command>> {
+  return (await loadStructures(dir, commandPredicate, recursive)).reduce(
+    (acc, cur) => acc.set(cur.data.name, cur),
+    new Map<string, Command>(),
+  )
 }
 
-export async function loadEvents(dir: PathLike, recursive = true): Promise<Event[]> {
-	return loadStructures(dir, eventPredicate, recursive);
+export async function loadEvents(
+  dir: PathLike,
+  recursive = true,
+): Promise<Event[]> {
+  return loadStructures(dir, eventPredicate, recursive)
 }

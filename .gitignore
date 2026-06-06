@@ -9,6 +9,12 @@ config.json
 
 # Database
 *.db
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
 
 # Logs & runtime output
 *.log
@@ -23,5 +29,7 @@ dist/
 # Python (legacy)
 __pycache__/
 *.pyc
-data/
 cogs/archived/
+
+# Private config (character settings)
+data/scenario.txt
