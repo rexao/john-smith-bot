@@ -9,7 +9,7 @@ import {
   type GuildMember,
 } from 'discord.js'
 import { type UserId } from '../domain/user.ts'
-import { calculateTimeElapsed } from '../util/time.ts'
+import { calculateTimeElapsed } from '../util/inspect/time.ts'
 
 const COLOR = 0x5873f2
 

@@ -12,7 +12,7 @@ import {
 } from '../../db/stats.ts'
 import { asGuildId } from '../../domain/guild.ts'
 import { PAGE_SIZE } from '../../domain/stats.ts'
-import { parsePeriod } from '../../util/period.ts'
+import { parsePeriod } from '../../util/stats/period.ts'
 
 export async function handleStatsButton(
   interaction: ButtonInteraction,

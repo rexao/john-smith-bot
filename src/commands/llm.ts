@@ -15,7 +15,7 @@ import {
 } from '../db/llm.ts'
 import { asChannelId } from '../domain/channel.ts'
 import { asGuildId } from '../domain/guild.ts'
-import { fetchOllamaModels } from '../util/llm.ts'
+import { fetchOllamaModels } from '../util/llm/chat.ts'
 import type { Command } from './index.ts'
 
 async function handleSettings(

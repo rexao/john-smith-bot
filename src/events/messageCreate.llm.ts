@@ -7,7 +7,7 @@ import {
   compilePrompt,
   chatCompletion,
   formatReply,
-} from '../util/llm.ts'
+} from '../util/llm/chat.ts'
 import type { Event } from './index.ts'
 
 type OnlineState = { online: boolean; until: number }

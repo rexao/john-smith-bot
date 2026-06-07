@@ -1,7 +1,7 @@
 import process from 'node:process'
 import type { Message, User, Guild } from 'discord.js'
-import type { LlmSettings } from '../domain/llm.ts'
-import { buildSystemPrompt } from './scenario.ts'
+import type { LlmSettings } from '../../domain/llm.ts'
+import { buildSystemPrompt } from './persona.ts'
 
 const ollamaBase = (
   process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'

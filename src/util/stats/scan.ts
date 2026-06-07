@@ -1,10 +1,10 @@
 import type { Guild } from 'discord.js'
-import { asChannelId, type ChannelId } from '../domain/channel.ts'
-import { Emoji, EMOJI_REGEX } from '../domain/emoji.ts'
-import { asGuildId } from '../domain/guild.ts'
-import { asMessageId, type MessageId } from '../domain/message.ts'
-import type { ScanEvent } from '../domain/stats.ts'
-import { asUserId } from '../domain/user.ts'
+import { asChannelId, type ChannelId } from '../../domain/channel.ts'
+import { Emoji, EMOJI_REGEX } from '../../domain/emoji.ts'
+import { asGuildId } from '../../domain/guild.ts'
+import { asMessageId, type MessageId } from '../../domain/message.ts'
+import type { ScanEvent } from '../../domain/stats.ts'
+import { asUserId } from '../../domain/user.ts'
 
 export async function scanGuild(guild: Guild): Promise<{
   channelCount: number,

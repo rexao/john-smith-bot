@@ -19,8 +19,8 @@ import {
 } from '../db/stats.ts'
 import { asGuildId } from '../domain/guild.ts'
 import { PAGE_SIZE } from '../domain/stats.ts'
-import { parsePeriod, getPeriodSuggestions } from '../util/period.ts'
-import { scanGuild } from '../util/scan.ts'
+import { parsePeriod, getPeriodSuggestions } from '../util/stats/period.ts'
+import { scanGuild } from '../util/stats/scan.ts'
 import type { Command } from './index.ts'
 
 async function handlePeriodSubcommand(

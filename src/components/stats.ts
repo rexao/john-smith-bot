@@ -13,7 +13,7 @@ import {
   rowToEmoji,
   PAGE_SIZE,
 } from '../domain/stats.ts'
-import { periodLabel } from '../util/period.ts'
+import { periodLabel } from '../util/stats/period.ts'
 
 type GuildInfo = { iconURL: string | null, name: string; }
 

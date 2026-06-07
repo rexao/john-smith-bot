@@ -1,6 +1,6 @@
 import { Events, type Client } from 'discord.js'
 import { getSettings, getAllChannels, queryTopChatterMsgCount } from '../db/llm.ts'
-import { compilePrompt, chatCompletion, formatReply } from '../util/llm.ts'
+import { compilePrompt, chatCompletion, formatReply } from '../util/llm/chat.ts'
 import type { Event } from './index.ts'
 import { goOnline, goOffline, isOnline } from './messageCreate.llm.ts'
 
