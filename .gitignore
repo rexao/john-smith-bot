@@ -1,0 +1,35 @@
+.claude/
+
+# Node.js
+node_modules/
+
+# Environment
+.env
+config.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+
+# Logs & runtime output
+*.log
+nohup.out
+
+# Build output
+dist/
+
+# macOS
+.DS_Store
+
+# Python (legacy)
+__pycache__/
+*.pyc
+cogs/archived/
+
+# Private config (character settings)
+data/scenario.txt
